@@ -1,0 +1,14 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from astropy import units as u
+
+# Una pequeña prueba: ¿Cuánto es 1 parsec en Unidades Astronómicas?
+distancia = 1 * u.pc
+print(f"1 Parsec equivale a: {distancia.to(u.AU)}")
+
+# Una gráfica simple de una función seno
+x = np.linspace(0, 10, 100)
+y = np.sin(x)
+plt.plot(x, y)
+plt.title("Sistema Astro-Env Operativo")
+plt.show()
