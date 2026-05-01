@@ -18,7 +18,7 @@ flowchart TD
     N --> O{"¿Existe solar_model.txt?"}
     O -- Sí --> P[Cargar datos, interpolar y comparar densidades]
     O -- No --> Q[Saltar comparación solar]
-    P --> Q
+    P --> R[Mostrar gráficos y tabla]
     Q --> R[Mostrar gráficos y tabla]
     R --> S[Fin]
 :::
