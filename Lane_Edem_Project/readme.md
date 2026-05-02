@@ -19,6 +19,6 @@ flowchart TD
     O -- Sí --> P[Cargar datos, interpolar y comparar densidades]
     O -- No --> Q[Saltar comparación solar]
     P --> R[Mostrar gráficos y tabla]
-    Q --> R[Mostrar gráficos y tabla]
+    Q --> S
     R --> S[Fin]
 :::
