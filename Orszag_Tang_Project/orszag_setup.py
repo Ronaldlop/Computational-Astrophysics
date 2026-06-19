@@ -14,8 +14,8 @@ YMAX = 1.0
 
 # Resolución=
 
-NX = 256
-NY = 256
+NX = 1024
+NY = 1024
 
 # Tiempo
 
