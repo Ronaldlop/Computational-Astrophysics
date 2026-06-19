@@ -194,3 +194,187 @@ def reconstruct_y(q):
     qR = qp1 - 0.25 * (qp2 - q)
 
     return qL, qR
+
+
+
+# Velocidad magnetosónica rápida (aproximada)
+
+def fast_magnetosonic_speed(rho, P, Bx, By):
+    """
+    Aproximación simple de la velocidad magnetosónica rápida.
+
+    cf² ≈ (γP + B²)/ρ
+    """
+
+    B2 = Bx**2 + By**2
+
+    cf = np.sqrt((GAMMA * P + B2) / rho)
+
+    return cf
+
+
+# Flujo HLL (dirección x)
+
+def hll_flux_x(UL, UR):
+    """
+    Flujo HLL en dirección x.
+
+    UL y UR son tuplas:
+
+    (rho, mx, my, E, Bx, By)
+    """
+
+    rhoL, mxL, myL, EL, BxL, ByL = UL
+    rhoR, mxR, myR, ER, BxR, ByR = UR
+
+    # primitivas
+    rhoL, vxL, vyL, PL, BxL, ByL = conserved_to_primitive(
+        rhoL, mxL, myL, EL, BxL, ByL
+    )
+
+    rhoR, vxR, vyR, PR, BxR, ByR = conserved_to_primitive(
+        rhoR, mxR, myR, ER, BxR, ByR
+    )
+
+    # velocidades características
+    cfL = fast_magnetosonic_speed(rhoL, PL, BxL, ByL)
+    cfR = fast_magnetosonic_speed(rhoR, PR, BxR, ByR)
+
+    SL = np.minimum(vxL - cfL, vxR - cfR)
+    SR = np.maximum(vxL + cfL, vxR + cfR)
+
+    # flujos físicos
+    FL = flux_x(*UL)
+    FR = flux_x(*UR)
+
+    FHLL = []
+
+    for UL_i, UR_i, FL_i, FR_i in zip(UL, UR, FL, FR):
+
+        F = np.where(
+            SL >= 0,
+            FL_i,
+            np.where(
+                SR <= 0,
+                FR_i,
+                (
+                    SR * FL_i
+                    - SL * FR_i
+                    + SL * SR * (UR_i - UL_i)
+                )
+                / (SR - SL)
+            )
+        )
+
+        FHLL.append(F)
+
+    return tuple(FHLL)
+
+
+# Flujo HLL (dirección y)
+
+def hll_flux_y(UL, UR):
+    """
+    Flujo HLL en dirección y.
+    """
+
+    rhoL, mxL, myL, EL, BxL, ByL = UL
+    rhoR, mxR, myR, ER, BxR, ByR = UR
+
+    rhoL, vxL, vyL, PL, BxL, ByL = conserved_to_primitive(
+        rhoL, mxL, myL, EL, BxL, ByL
+    )
+
+    rhoR, vxR, vyR, PR, BxR, ByR = conserved_to_primitive(
+        rhoR, mxR, myR, ER, BxR, ByR
+    )
+
+    cfL = fast_magnetosonic_speed(rhoL, PL, BxL, ByL)
+    cfR = fast_magnetosonic_speed(rhoR, PR, BxR, ByR)
+
+    SL = np.minimum(vyL - cfL, vyR - cfR)
+    SR = np.maximum(vyL + cfL, vyR + cfR)
+
+    GL = flux_y(*UL)
+    GR = flux_y(*UR)
+
+    GHLL = []
+
+    for UL_i, UR_i, GL_i, GR_i in zip(UL, UR, GL, GR):
+
+        G = np.where(
+            SL >= 0,
+            GL_i,
+            np.where(
+                SR <= 0,
+                GR_i,
+                (
+                    SR * GL_i
+                    - SL * GR_i
+                    + SL * SR * (UR_i - UL_i)
+                )
+                / (SR - SL)
+            )
+        )
+
+        GHLL.append(G)
+
+    return tuple(GHLL)
+
+# Operador espacial L(U)
+
+def spatial_operator(U, dx, dy):
+
+    rho, mx, my, E, Bx, By = U
+
+    varsU = [rho, mx, my, E, Bx, By]
+
+    # Reconstrucción en x
+
+    ULx = []
+    URx = []
+
+    for q in varsU:
+
+        qL, qR = reconstruct_x(q)
+
+        ULx.append(qL)
+        URx.append(qR)
+
+    ULx = tuple(ULx)
+    URx = tuple(URx)
+
+    Fx = hll_flux_x(ULx, URx)
+
+    # Reconstrucción en y
+
+    ULy = []
+    URy = []
+
+    for q in varsU:
+
+        qL, qR = reconstruct_y(q)
+
+        ULy.append(qL)
+        URy.append(qR)
+
+    ULy = tuple(ULy)
+    URy = tuple(URy)
+
+    Gy = hll_flux_y(ULy, URy)
+
+    # Divergencia de flujos
+
+    L = []
+
+    for Fx_i, Gy_i in zip(Fx, Gy):
+
+        dFdx = (Fx_i - np.roll(Fx_i, 1, axis=0)) / dx
+
+        dGdy = (Gy_i - np.roll(Gy_i, 1, axis=1)) / dy
+
+        L_i = -(dFdx + dGdy)
+
+        L.append(L_i)
+
+    return tuple(L)
