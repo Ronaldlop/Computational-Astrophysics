@@ -1,0 +1,18 @@
+flowchart LR
+    A["Conjunto de datos oficial SPARC"] --> B["Etapa 1<br/>Adquisición y procesamiento de datos"]
+
+    B --> C["175 galaxias<br/>3391 mediciones de curvas de rotación"]
+
+    C --> D["Etapa 2<br/>Diseño e ingestión en base de datos SQLite"]
+
+    D --> E["sparc_project.db"]
+
+    E --> F["Etapa 3<br/>Consultas SQL y obtención de estadísticas"]
+
+    F --> G["Catálogo estadístico de galaxias"]
+
+    G --> H["Etapa 4<br/>Dashboard de visualización estadística"]
+
+    H --> I["6 visualizaciones científicas"]
+
+    I --> J["Etapa 5<br/>Interpretación y conclusiones"]
