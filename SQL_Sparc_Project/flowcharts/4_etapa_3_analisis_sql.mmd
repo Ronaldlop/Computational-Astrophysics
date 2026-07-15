@@ -1,0 +1,156 @@
+flowchart TD
+
+    %% BLOQUE 1: ENTRADA DESDE LA ETAPA 2
+
+    A["Base de datos validada<br/>sparc_project.db"] --> B["Conectar con SQLite"]
+
+    B --> C["Consultar las tablas<br/>de la base de datos"]
+
+    C --> D["galaxies<br/>175 galaxias"]
+    C --> E["rotation_curves<br/>3391 mediciones"]
+    C --> F["metadata<br/>12 entradas"]
+
+    %% BLOQUE 2: CONSULTAS BÁSICAS
+
+    D --> G["Recuperar catálogo<br/>de galaxias"]
+
+    G --> G1["SELECT"]
+    G --> G2["ORDER BY"]
+
+    D --> H["Filtrar galaxias según<br/>criterios de análisis"]
+
+    H --> H1["WHERE"]
+    H --> H2["Consultas parametrizadas"]
+
+    D --> I["Calcular estadísticas<br/>globales de la muestra"]
+
+    I --> I1["COUNT"]
+    I --> I2["MIN y MAX"]
+    I --> I3["AVG"]
+
+    %% BLOQUE 3: COMBINACIÓN DE TABLAS
+
+    D --> J["Combinar información<br/>de galaxias y curvas"]
+    E --> J
+
+    J --> K["JOIN mediante<br/>galaxy_id"]
+
+    K --> L["Agrupar las mediciones<br/>por galaxia"]
+
+    L --> M["GROUP BY"]
+
+    %% BLOQUE 4: ESTADÍSTICAS CINEMÁTICAS
+
+    M --> N["Calcular estadísticas<br/>cinemáticas por galaxia"]
+
+    N --> N1["Número de puntos<br/>N_points"]
+
+    N --> N2["Radio mínimo y máximo<br/>R_min y R_max"]
+
+    N --> N3["Velocidad mínima y máxima<br/>V_min y V_max"]
+
+    N --> N4["Velocidad observada media"]
+
+    N --> N5["Incertidumbre media"]
+
+    N1 --> O["Catálogo cinemático"]
+    N2 --> O
+    N3 --> O
+    N4 --> O
+    N5 --> O
+
+    %% BLOQUE 5: FILTRADO DE GRUPOS
+
+    O --> P["Seleccionar galaxias<br/>bien muestreadas"]
+
+    P --> Q["HAVING<br/>N_points ≥ 20"]
+
+    Q --> R["Submuestra de galaxias<br/>con curvas bien muestreadas"]
+
+    %% BLOQUE 6: COMPONENTES BARIÓNICAS
+
+    K --> S["Analizar componentes<br/>bariónicas"]
+
+    S --> S1["Velocidad del gas"]
+    S --> S2["Velocidad del disco"]
+    S --> S3["Velocidad del bulbo"]
+    S --> S4["Brillo superficial"]
+
+    S1 --> T["Calcular valores medios<br/>y máximos"]
+    S2 --> T
+    S3 --> T
+    S4 --> T
+
+    T --> U["Estadísticas de las<br/>componentes bariónicas"]
+
+    %% BLOQUE 7: CLASIFICACIÓN SEGÚN BULBO
+
+    U --> V["Evaluar la contribución<br/>máxima del bulbo"]
+
+    V --> W{"¿V_bulge,max > 0?"}
+
+    W -- "Sí" --> X["Con contribución<br/>de bulbo"]
+
+    W -- "No" --> Y["Sin contribución<br/>de bulbo"]
+
+    X --> Z["CASE WHEN"]
+    Y --> Z
+
+    Z --> ZA["Clasificación categórica<br/>de las 175 galaxias"]
+
+    %% BLOQUE 8: CATÁLOGO ESTADÍSTICO FINAL
+
+    O --> ZB["Combinar resultados<br/>estadísticos"]
+
+    U --> ZB
+    ZA --> ZB
+    D --> ZB
+
+    ZB --> ZC["Construir galaxy_statistics"]
+
+    ZC --> ZD["Una fila por galaxia<br/>175 filas"]
+
+    ZD --> ZE["Propiedades globales"]
+    ZD --> ZF["Propiedades cinemáticas"]
+    ZD --> ZG["Componentes bariónicas"]
+    ZD --> ZH["Clasificación por bulbo"]
+
+    %% BLOQUE 9: VALIDACIÓN DEL CATÁLOGO
+
+    ZE --> ZI["Validar catálogo estadístico"]
+    ZF --> ZI
+    ZG --> ZI
+    ZH --> ZI
+
+    ZI --> ZJ["Comprobar valores faltantes"]
+
+    ZI --> ZK["Comparar número de puntos<br/>almacenado y calculado"]
+
+    ZJ --> ZL{"¿El catálogo es<br/>consistente?"}
+    ZK --> ZL
+
+    ZL -- "No" --> ZM["Revisar consultas SQL<br/>y agregaciones"]
+
+    ZM --> K
+
+    ZL -- "Sí" --> ZN["Catálogo estadístico<br/>validado"]
+
+    %% BLOQUE 10: CONSULTA DE UNA GALAXIA INDIVIDUAL
+
+    K --> ZO["Consulta parametrizada<br/>de una galaxia individual"]
+
+    ZO --> ZP["Seleccionar galaxia<br/>por nombre"]
+
+    ZP --> ZQ["Ejemplo: NGC2403"]
+
+    ZQ --> ZR["Recuperar curva completa<br/>ordenada por radio"]
+
+    %% SALIDA HACIA LA ETAPA 4
+
+    ZN --> ZS["Datos para análisis<br/>estadístico global"]
+
+    ZR --> ZT["Datos para curva de<br/>rotación individual"]
+
+    ZS --> ZU["Listo para la Etapa 4<br/>Dashboard estadístico"]
+
+    ZT --> ZU

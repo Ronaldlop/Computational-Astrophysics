@@ -1,0 +1,78 @@
+flowchart TD
+
+    %% BLOQUE 1: ADQUISICIÓN DE LOS DATOS
+
+    A["Sitio web oficial de SPARC"] --> B["Modelos de masa newtonianos<br/>Rotmod_LTG.zip"]
+
+    B --> C{"¿El archivo ZIP<br/>ya existe localmente?"}
+
+    C -- "No" --> D["Descargar Rotmod_LTG.zip<br/>desde la fuente oficial"]
+    C -- "Sí" --> E["Utilizar el archivo ZIP<br/>existente"]
+
+    D --> F["Descarga robusta con requests<br/>por bloques y con reintentos"]
+    F --> G["Guardar en<br/>data/raw/Rotmod_LTG.zip"]
+
+    E --> H["Validar el archivo ZIP"]
+    G --> H
+
+    H --> I{"¿El archivo existe,<br/>no está vacío y es un ZIP válido?"}
+
+    I -- "No" --> J["Detener el pipeline<br/>y reportar el error"]
+    I -- "Sí" --> K["Extraer el contenido<br/>del archivo ZIP"]
+
+    %% BLOQUE 2: EXTRACCIÓN Y LECTURA
+
+    K --> L["Buscar automáticamente<br/>todos los archivos .dat"]
+
+    L --> M["175 archivos de galaxias encontrados"]
+
+    M --> N["Leer cada archivo<br/>*_rotmod.dat"]
+
+    N --> O["Extraer información<br/>del encabezado"]
+    N --> P["Leer la tabla numérica<br/>de la curva de rotación"]
+
+    O --> Q["Nombre de la galaxia"]
+    O --> R["Distancia en Mpc"]
+    O --> S["Número de puntos"]
+
+    P --> T["Radio"]
+    P --> U["Velocidad observada<br/>e incertidumbre"]
+    P --> V["Contribuciones de<br/>gas, disco y bulbo"]
+    P --> W["Brillo superficial<br/>del disco y del bulbo"]
+
+    %% BLOQUE 3: ESTRUCTURACIÓN DE LOS DATOS
+
+    Q --> X["Construir galaxies_df"]
+    R --> X
+    S --> X
+
+    T --> Y["Construir rotation_curves_df"]
+    U --> Y
+    V --> Y
+    W --> Y
+
+    X --> X1["175 galaxias<br/>Una fila por galaxia"]
+
+    Y --> Y1["3391 mediciones<br/>Una fila por punto radial"]
+
+    %% BLOQUE 4: CONTROL DE CALIDAD
+
+    X1 --> Z["Control de calidad<br/>y consistencia"]
+    Y1 --> Z
+
+    Z --> ZA["Verificar valores faltantes"]
+    Z --> ZB["Verificar filas duplicadas"]
+    Z --> ZC["Verificar valores físicos"]
+    Z --> ZD["Verificar consistencia<br/>entre ambos DataFrames"]
+
+    ZA --> ZE{"¿Los datos superan<br/>las validaciones?"}
+    ZB --> ZE
+    ZC --> ZE
+    ZD --> ZE
+
+    ZE -- "No" --> ZF["Revisar y corregir<br/>los datos problemáticos"]
+    ZF --> Z
+
+    ZE -- "Sí" --> ZG["Conjunto de datos SPARC<br/>validado y estructurado"]
+
+    ZG --> ZH["Listo para la Etapa 2<br/>Ingestión en SQLite"]

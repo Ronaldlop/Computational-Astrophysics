@@ -1,0 +1,122 @@
+flowchart TD
+
+    %% BLOQUE 1: ENTRADA DESDE LA ETAPA 1
+
+    A["Datos validados de la Etapa 1"] --> B["galaxies_df<br/>175 galaxias"]
+    A --> C["rotation_curves_df<br/>3391 mediciones"]
+
+    B --> D["Definir ubicación de la base de datos"]
+    C --> D
+
+    D --> E["Crear<br/>database/sparc_project.db"]
+
+    E --> F["Activar soporte para<br/>claves foráneas"]
+
+    %% BLOQUE 2: DISEÑO DEL ESQUEMA RELACIONAL
+
+    F --> G["Crear esquema relacional"]
+
+    G --> H["Tabla galaxies"]
+    G --> I["Tabla rotation_curves"]
+    G --> J["Tabla metadata"]
+
+    H --> H1["galaxy_id<br/>Clave primaria"]
+    H --> H2["name<br/>Nombre único"]
+    H --> H3["distance_mpc"]
+    H --> H4["n_points"]
+
+    I --> I1["point_id<br/>Clave primaria"]
+    I --> I2["galaxy_id<br/>Clave foránea"]
+    I --> I3["radius_kpc"]
+    I --> I4["Velocidades y<br/>brillos superficiales"]
+
+    J --> J1["key<br/>Clave primaria"]
+    J --> J2["value<br/>Valor de metadata"]
+
+    %% BLOQUE 3: INSERCIÓN DE GALAXIAS
+
+    B --> K["Insertar registros<br/>en galaxies"]
+
+    K --> L["175 galaxias almacenadas"]
+
+    L --> M["Consultar identificadores<br/>generados por SQLite"]
+
+    M --> N["Construir mapeo<br/>nombre de galaxia → galaxy_id"]
+
+    %% BLOQUE 4: INSERCIÓN DE CURVAS DE ROTACIÓN
+
+    C --> O["Asignar galaxy_id<br/>a cada medición"]
+
+    N --> O
+
+    O --> P["Preparar 3391 registros<br/>para inserción"]
+
+    P --> Q["Insertar registros en<br/>rotation_curves"]
+
+    Q --> R["3391 puntos de curvas<br/>almacenados"]
+
+    %% BLOQUE 5: RELACIÓN ENTRE TABLAS
+
+    L --> S["Relación uno a muchos"]
+    R --> S
+
+    S --> T["Una galaxia puede tener<br/>múltiples puntos de medición"]
+
+    T --> U["galaxies 1 : N rotation_curves"]
+
+    U --> V["Integridad referencial mediante<br/>galaxy_id como clave foránea"]
+
+    %% BLOQUE 6: METADATA
+
+    W["Información del conjunto de datos"] --> X["Construir metadata"]
+
+    X --> X1["Nombre del dataset"]
+    X --> X2["Fuente oficial y archivo"]
+    X --> X3["Unidades físicas"]
+    X --> X4["Fecha de recuperación"]
+    X --> X5["Descripción del pipeline"]
+
+    X1 --> Y["Insertar o actualizar<br/>tabla metadata"]
+    X2 --> Y
+    X3 --> Y
+    X4 --> Y
+    X5 --> Y
+
+    Y --> Z["12 entradas de metadata<br/>almacenadas"]
+
+    %% BLOQUE 7: OPTIMIZACIÓN Y VALIDACIÓN
+
+    V --> ZA["Crear índices SQL"]
+    Z --> ZA
+
+    ZA --> ZB["Validar contenido<br/>de la base de datos"]
+
+    ZB --> ZC["Comprobar número de galaxias<br/>175"]
+    ZB --> ZD["Comprobar número de mediciones<br/>3391"]
+    ZB --> ZE["Comprobar metadata<br/>12 entradas"]
+    ZB --> ZF["Ejecutar consulta JOIN<br/>entre las tablas"]
+
+    ZC --> ZG["Comprobar integridad<br/>de la base de datos"]
+    ZD --> ZG
+    ZE --> ZG
+    ZF --> ZG
+
+    ZG --> ZH["PRAGMA integrity_check"]
+
+    ZH --> ZI{"¿La integridad<br/>es correcta?"}
+
+    ZI -- "No" --> ZJ["Revisar esquema,<br/>datos y relaciones"]
+
+    ZJ --> ZB
+
+    ZI -- "Sí" --> ZK["Verificar claves foráneas"]
+
+    ZK --> ZL{"¿Existen violaciones<br/>de claves foráneas?"}
+
+    ZL -- "Sí" --> ZJ
+
+    ZL -- "No" --> ZM["Base de datos relacional<br/>validada"]
+
+    ZM --> ZN["Cerrar conexión<br/>de forma segura"]
+
+    ZN --> ZO["sparc_project.db<br/>Listo para la Etapa 3"]
